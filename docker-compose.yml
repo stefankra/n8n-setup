@@ -1,0 +1,45 @@
+# ===================================================================
+# Finale docker-compose.yml für ein robustes n8n-Setup
+# ===================================================================
+version: "3.8"
+
+services:
+  n8n:
+    # Baut das Image aus dem Dockerfile im aktuellen Verzeichnis
+    build: .
+    restart: unless-stopped
+    ports:
+      # Port wird NUR an localhost gebunden. Der Zugriff von außen
+      # ist somit unmöglich, außer über den Reverse-Proxy.
+      - "127.0.0.1:5678:5678"
+    env_file:
+      - .env
+    volumes:
+      # Mappt das n8n-Datenverzeichnis in ein persistentes Volume
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        # Stellt sicher, dass n8n erst startet, wenn die Datenbank
+        # laut Healthcheck bereit für Verbindungen ist.
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=n8n
+    volumes:
+      # Mappt das Postgres-Datenverzeichnis in ein persistentes Volume
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      # Prüft alle 5s, ob die Datenbank auf Anfragen reagiert.
+      test: ["CMD-SHELL", "pg_isready -U n8n -d n8n"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  n8n_data:
+  pg_data:
