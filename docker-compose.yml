@@ -12,8 +12,6 @@ services:
       # Port wird NUR an localhost gebunden. Der Zugriff von außen
       # ist somit unmöglich, außer über den Reverse-Proxy.
       - "127.0.0.1:5678:5678"
-    env_file:
-      - .env
     volumes:
       # Mappt das n8n-Datenverzeichnis in ein persistentes Volume
       - n8n_data:/home/node/.n8n
