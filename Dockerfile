@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
 
 USER node
 WORKDIR /home/node/.n8n
+
+COPY package.json package-lock.json ./
+RUN npm ci
 RUN npm install playwright cheerio dayjs luxon lodash \
   && npx playwright install --with-deps
 
