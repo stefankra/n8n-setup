@@ -4,12 +4,14 @@ services:
   postgres:
     image: postgres:15
     restart: unless-stopped
-    env_file:
-      - stack.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "n8n", "-d", "n8n"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -18,9 +20,23 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5678:5678"      # nur intern – extern via Reverse Proxy
-    env_file:
-      - stack.env
+      - "127.0.0.1:5678:5678"
+    environment:
+      # DB
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Auth
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+      N8N_USER_MANAGEMENT_DISABLED: "true"
+      # Misc
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      N8N_DIAGNOSTICS_ENABLED: "false"
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
